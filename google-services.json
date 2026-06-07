@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "346245440026",
+    "project_id": "pindah-peron",
+    "storage_bucket": "pindah-peron.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346245440026:android:70ec5744abd68eda4fe7a3",
+        "android_client_info": {
+          "package_name": "com.pindahperon.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcdt7iPnTVEDCgVfcFHcjgrM1u9oRR8Qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
