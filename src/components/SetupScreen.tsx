@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  SectionList,
   StatusBar,
   Text,
   TextInput,
@@ -27,6 +28,9 @@ export const SetupScreen = () => {
     selectedLine,
     setSelectedLine,
     filteredStations,
+    popularStations,
+    startStationName,
+    endStationName,
     handleStationSelect,
     transitStation,
     startLine,
@@ -34,6 +38,7 @@ export const SetupScreen = () => {
     endStation,
     setActiveTrain,
     goBack,
+    resetToStart,
   } = useSetupLogic();
 
   return (
@@ -47,21 +52,54 @@ export const SetupScreen = () => {
           </View>
         </View>
 
-        <Animated.View entering={FadeInDown} key={step} style={styles.titleSection}>
-          <Text style={styles.title}>
-            {step === 1
-              ? 'OBJECTIVE: ORIGIN'
-              : step === 2
-                ? 'OBJECTIVE: DESTINATION'
-                : 'OBJECTIVE: SELECT UNIT'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {step === 1
-              ? 'Pilih stasiun keberangkatan Anda'
-              : step === 2
-                ? 'Tentukan target akhir perjalanan'
-                : 'Pilih armada yang sedang Anda naiki'}
-          </Text>
+        {/* 🚀 NEW VISIONARY ROUTE BUILDER UI */}
+        <Animated.View entering={FadeInDown} style={styles.routeBuilderCard}>
+          {/* Origin Row */}
+          <View style={[styles.routeRow, step === 1 && styles.activeRouteRow]}>
+            <View style={styles.routeIconColumn}>
+              <View style={[styles.routeDot, { backgroundColor: '#3b82f6' }]} />
+              <View style={styles.routeConnectorLine} />
+            </View>
+            <View style={styles.routeInputBox}>
+              <Text style={styles.routeLabel}>ASAL KEBERANGKATAN</Text>
+              {step === 1 ? (
+                <TextInput
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder='Cari Stasiun Asal...'
+                  placeholderTextColor='#94a3b8'
+                  style={styles.routeInput}
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.routeSelectedText}>{startStationName}</Text>
+              )}
+            </View>
+          </View>
+
+          {/* Destination Row */}
+          <View style={[styles.routeRow, step === 2 && styles.activeRouteRow]}>
+            <View style={styles.routeIconColumn}>
+              <View style={[styles.routePin, { backgroundColor: '#ef4444' }]} />
+            </View>
+            <View style={styles.routeInputBox}>
+              <Text style={styles.routeLabel}>TUJUAN AKHIR</Text>
+              {step === 2 ? (
+                <TextInput
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder='Cari Stasiun Tujuan...'
+                  placeholderTextColor='#94a3b8'
+                  style={styles.routeInput}
+                  autoFocus
+                />
+              ) : step === 3 ? (
+                <Text style={styles.routeSelectedText}>{endStationName}</Text>
+              ) : (
+                <Text style={styles.routePlaceholder}>Pilih stasiun asal dahulu</Text>
+              )}
+            </View>
+          </View>
         </Animated.View>
 
         <View style={styles.progressContainer}>
@@ -76,18 +114,7 @@ export const SetupScreen = () => {
         </View>
 
         {step < 3 && (
-          <>
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.searchWrapper}>
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder='Cari Nama Stasiun...'
-                placeholderTextColor='#94a3b8'
-                style={styles.search}
-              />
-            </Animated.View>
-            <LineFilter selectedLine={selectedLine} onSelect={setSelectedLine} />
-          </>
+          <LineFilter selectedLine={selectedLine} onSelect={setSelectedLine} />
         )}
 
         {step === 3 && !loading && (
@@ -103,27 +130,42 @@ export const SetupScreen = () => {
           {loading ? (
             <View style={styles.center}>
               <ActivityIndicator size='large' color="#3b82f6" />
-              <Text style={styles.loadingText}>MENGAMBIL DATA ARMADA...</Text>
+              <Text style={styles.loadingText}>MENYIAPKAN DATA OPERASI...</Text>
             </View>
-          ) : (
+          ) : step === 3 ? (
             <FlatList
-              data={step === 3 ? trains : filteredStations}
-              keyExtractor={(item: any) => item.train_id || item.id}
-              renderItem={({ item, index }) => 
-                step === 3 ? (
-                  <TrainCard 
-                    item={item} 
-                    index={index} 
-                    onPress={() => setActiveTrain(item)} 
-                  />
-                ) : (
-                  <StationCard 
-                    item={item} 
-                    index={index} 
-                    onPress={() => handleStationSelect(item.id)} 
-                  />
-                )
-              }
+              data={trains}
+              keyExtractor={(item) => item.train_id}
+              renderItem={({ item, index }) => (
+                <TrainCard 
+                  item={item} 
+                  index={index} 
+                  onPress={() => setActiveTrain(item)} 
+                />
+              )}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <SectionList
+              sections={[
+                ...(popularStations.length > 0 && !search ? [{ title: 'STASIUN POPULER', data: popularStations }] : []),
+                ...filteredStations
+              ]}
+              keyExtractor={(item: any) => item.id}
+              stickySectionHeadersEnabled={true}
+              renderSectionHeader={({ section: { title } }) => (
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>{title}</Text>
+                </View>
+              )}
+              renderItem={({ item, index }) => (
+                <StationCard 
+                  item={item} 
+                  index={index} 
+                  onPress={() => handleStationSelect(item.id)} 
+                />
+              )}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
             />
@@ -131,9 +173,15 @@ export const SetupScreen = () => {
         </View>
 
         {step > 1 && !loading && (
-          <Pressable style={styles.backBtn} onPress={goBack}>
-            <Text style={styles.backText}>KEMBALI KE TAHAP SEBELUMNYA</Text>
-          </Pressable>
+          <View style={styles.actionFooter}>
+            <Pressable style={styles.backBtn} onPress={goBack}>
+              <Text style={styles.backText}>TAHAP SEBELUMNYA</Text>
+            </Pressable>
+            <View style={styles.dividerVertical} />
+            <Pressable style={styles.resetBtn} onPress={resetToStart}>
+              <Text style={styles.resetText}>RESET OPERASI</Text>
+            </Pressable>
+          </View>
         )}
       </View>
     </SafeAreaView>
