@@ -1,3 +1,11 @@
+export interface Station {
+  sta_id: string;
+  sta_name: string;
+  group_wil: number;
+  fg_enable: number;
+  line?: string; // Optional field we will add based on mapping
+}
+
 export interface ScheduleItem {
   station_id: string;
   station_name?: string;
